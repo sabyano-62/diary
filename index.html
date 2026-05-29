@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مذكراتي (My Diary)</title>
+    <style>
+        /* CSS Variables for Light / Dark Mode */
+        :root {
+            --bg-color: #f8fafc;
+            --surface-color: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --border-color: #e2e8f0;
+            --red: #ef4444;
+            --red-hover: #fef2f2;
+            --folder-bg: #e0e7ff;
+            --folder-icon: #6366f1;
+            --modal-bg: rgba(0, 0, 0, 0.5);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        .dark {
+            --bg-color: #0f172a;
+            --surface-color: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --folder-bg: #3730a3;
+            --folder-icon: #818cf8;
+            --modal-bg: rgba(0, 0, 0, 0.7);
+            --red-hover: rgba(239, 68, 68, 0.1);
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-family); }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            transition: background-color 0.3s, color 0.3s;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* SVG Icons encoded for reliable Sandbox rendering */
+        .icon { display: inline-block; width: 24px; height: 24px; background-size: contain; background-repeat: no-repeat; background-position: center; }
+        .icon-lock { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512' fill='white'%3E%3Cpath d='M144 144v48H304V144c0-44.2-35.8-80-80-80s-80 35.8-80 80zM80 192V144C80 64.5 144.5 0 224 0s144 64.5 144 144v48h16c35.3 0 64 28.7 64 64V448c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V256c0-35.3 28.7-64 64-64H80z'/%3E%3C/svg%3E"); }
+        .icon-lock-red { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512' fill='%23ef4444'%3E%3Cpath d='M144 144v48H304V144c0-44.2-35.8-80-80-80s-80 35.8-80 80zM80 192V144C80 64.5 144.5 0 224 0s144 64.5 144 144v48h16c35.3 0 64 28.7 64 64V448c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V256c0-35.3 28.7-64 64-64H80z'/%3E%3C/svg%3E"); }
+        .icon-sun { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23facc15'%3E%3Cpath d='M361.5 1.2c5 2.1 8.6 6.6 9.6 11.9L391 121l107.9 19.8c5.3 1 9.8 4.6 11.9 9.6s1.5 10.7-1.6 15.2L446.9 256l62.3 90.3c3.1 4.5 3.7 10.2 1.6 15.2s-6.6 8.6-11.9 9.6L391 391 371.1 498.9c-1 5.3-4.6 9.8-9.6 11.9s-10.7 1.5-15.2-1.6L256 446.9l-90.3 62.3c-4.5 3.1-10.2 3.7-15.2 1.6s-8.6-6.6-9.6-11.9L121 391 13.1 371.1c-5.3-1-9.8-4.6-11.9-9.6s-1.5-10.7 1.6-15.2L65.1 256 2.8 165.7c-3.1-4.5-3.7-10.2-1.6-15.2s6.6-8.6 11.9-9.6L121 121 140.9 13.1c1-5.3 4.6-9.8 9.6-11.9s10.7-1.5 15.2 1.6L256 65.1 346.3 2.8c4.5-3.1 10.2-3.7 15.2-1.6zM160 256a96 96 0 1 1 192 0 96 96 0 1 1 -192 0zm224 0a128 128 0 1 0 -256 0 128 128 0 1 0 256 0z'/%3E%3C/svg%3E"); }
+        .icon-moon { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 384 512' fill='%234b5563'%3E%3Cpath d='M223.5 32C100 32 0 132.3 0 256S100 480 223.5 480c60.6 0 115.5-24.2 155.8-63.4c5-4.9 6.3-12.5 3.1-18.7s-10.1-9.7-17-8.5c-9.8 1.7-19.8 2.6-30.1 2.6c-96.9 0-175.5-78.8-175.5-176c0-65.8 36-123.1 89.3-153.3c6.1-3.5 9.2-10.5 7.7-17.3s-7.3-11.9-14.3-12.5c-6.3-.5-12.6-.8-19-.8z'/%3E%3C/svg%3E"); }
+        .icon-pen { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='white'%3E%3Cpath d='M362.7 19.3L314.3 67.7 444.3 197.7l48.4-48.4c25-25 25-65.5 0-90.5L453.3 19.3c-25-25-65.5-25-90.5 0zm-71 71L58.6 323.5c-10.4 10.4-18 23.3-22.2 37.4L1 481.2C-1.5 489.7 .8 498.8 7 505s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L421.7 220.3 291.7 90.3z'/%3E%3C/svg%3E"); }
+        .icon-arrow-right { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512' fill='currentColor'%3E%3Cpath d='M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0-105.4 105.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z'/%3E%3C/svg%3E"); }
+        .icon-trash { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512' fill='white'%3E%3Cpath d='M135.2 17.7L128 32 32 32C14.3 32 0 46.3 0 64S14.3 96 32 96l384 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-96 0-7.2-14.3C307.4 6.8 296.3 0 284.2 0L163.8 0c-12.1 0-23.2 6.8-28.6 17.7zM416 128L32 128 53.2 467c1.6 25.3 22.6 45 47.9 45l245.8 0c25.3 0 46.3-19.7 47.9-45L416 128z'/%3E%3C/svg%3E"); }
+        .icon-folder { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%236366f1'%3E%3Cpath d='M64 480H448c35.3 0 64-28.7 64-64V160c0-35.3-28.7-64-64-64H288c-10.1 0-19.6-4.7-25.6-12.8L243.2 57.6C231.1 41.5 212.1 32 192 32H64C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64z'/%3E%3C/svg%3E"); }
+        .dark .icon-folder { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23818cf8'%3E%3Cpath d='M64 480H448c35.3 0 64-28.7 64-64V160c0-35.3-28.7-64-64-64H288c-10.1 0-19.6-4.7-25.6-12.8L243.2 57.6C231.1 41.5 212.1 32 192 32H64C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64z'/%3E%3C/svg%3E"); }
+        .icon-gear { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='currentColor'%3E%3Cpath d='M495.9 166.6c3.2 8.7 .5 18.4-6.4 24.6l-43.3 39.4c1.1 8.3 1.7 16.8 1.7 25.4s-.6 17.1-1.7 25.4l43.3 39.4c6.9 6.2 9.6 15.9 6.4 24.6c-4.4 11.9-9.7 23.3-15.8 34.3l-4.7 8.1c-6.6 11-14 21.4-22.1 31.2c-5.9 7.2-15.7 9.6-24.5 6.8l-55.7-17.7c-13.4 10.3-28.2 18.9-44 25.4l-12.5 57.1c-2 9.1-9 16.3-18.2 17.8c-13.8 2.3-28 3.5-42.5 3.5s-28.7-1.2-42.5-3.5c-9.2-1.5-16.2-8.7-18.2-17.8l-12.5-57.1c-15.8-6.5-30.6-15.1-44-25.4L83.1 425.9c-8.8 2.8-18.6 .3-24.5-6.8c-8.1-9.8-15.5-20.2-22.1-31.2l-4.7-8.1c-6.1-11-11.4-22.4-15.8-34.3c-3.2-8.7-.5-18.4 6.4-24.6l43.3-39.4C64.6 273.1 64 264.6 64 256s.6-17.1 1.7-25.4L22.4 191.2c-6.9-6.2-9.6-15.9-6.4-24.6c4.4-11.9 9.7-23.3 15.8-34.3l4.7-8.1c6.6-11 14-21.4 22.1-31.2c5.9-7.2 15.7-9.6 24.5-6.8l55.7 17.7c13.4-10.3 28.2-18.9 44-25.4l12.5-57.1c2-9.1 9-16.3 18.2-17.8C227.3 1.2 241.5 0 256 0s28.7 1.2 42.5 3.5c9.2 1.5 16.2 8.7 18.2 17.8l12.5 57.1c15.8 6.5 30.6 15.1 44 25.4l55.7-17.7c8.8-2.8 18.6-.3 24.5 6.8c8.1 9.8 15.5 20.2 22.1 31.2l4.7 8.1c6.1 11 11.4 22.4 15.8 34.3zM256 336a80 80 0 1 0 0-160 80 80 0 1 0 0 160z'/%3E%3C/svg%3E"); }
+        .icon-plus { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512' fill='currentColor'%3E%3Cpath d='M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z'/%3E%3C/svg%3E"); }
+        .icon-edit { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='currentColor'%3E%3Cpath d='M471.6 21.7c-21.9-21.9-57.3-21.9-79.2 0L362.3 51.7l97.9 97.9 30.1-30.1c21.9-21.9 21.9-57.3 0-79.2L471.6 21.7zm-299.2 220c-6.1 6.1-10.8 13.6-13.5 21.9l-29.6 88.8c-2.9 8.6-.6 18.1 5.8 24.6s15.9 8.7 24.6 5.8l88.8-29.6c8.2-2.7 15.7-7.4 21.9-13.5L437.7 172.3 339.7 74.3 172.4 241.7zM96 64C43 64 0 107 0 160V416c0 53 43 96 96 96H352c53 0 96-43 96-96V320c0-17.7-14.3-32-32-32s-32 14.3-32 32v96c0 17.7-14.3 32-32 32H96c-17.7 0-32-14.3-32-32V160c0-17.7 14.3-32 32-32h96c17.7 0 32-14.3 32-32s-14.3-32-32-32H96z'/%3E%3C/svg%3E"); }
+
+        /* Utility Classes */
+        .btn { padding: 12px 24px; border-radius: 12px; border: none; cursor: pointer; font-size: 16px; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+        .btn-danger { background-color: var(--red); color: white; }
+        .btn-icon { background: var(--surface-color); border: 1px solid var(--border-color); color: var(--text-main); padding: 12px; }
+        .btn-icon:hover { background: var(--border-color); }
+        
+        .input-field { width: 100%; padding: 16px; border-radius: 12px; border: 2px solid var(--border-color); background-color: transparent; color: var(--text-main); font-size: 18px; outline: none; transition: border-color 0.2s; }
+        .input-field:focus { border-color: var(--primary); }
+
+        /* Screens */
+        .screen { display: none; height: 100%; width: 100%; }
+        .screen.active { display: flex; flex-direction: column; }
+
+        /* Header Components */
+        .header { padding: 24px 40px; display: flex; justify-content: space-between; align-items: center; background-color: var(--surface-color); border-bottom: 1px solid var(--border-color); }
+        .header h1 { font-size: 24px; display: flex; align-items: center; gap: 12px; }
+        .header-actions { display: flex; gap: 12px; align-items: center; }
+
+        /* Grids */
+        .main-content { flex: 1; overflow-y: auto; padding: 40px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; align-content: start; }
+        .empty-state { grid-column: 1 / -1; text-align: center; color: var(--text-muted); margin-top: 100px; }
+        
+        /* Folders (Categories) */
+        .folder-card {
+            background-color: var(--surface-color); border: 1px solid var(--border-color); border-radius: 20px; padding: 32px 24px; cursor: pointer;
+            box-shadow: var(--shadow); transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; position: relative;
+        }
+        .folder-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+        .folder-icon-wrap { width: 64px; height: 64px; background-color: var(--folder-bg); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+        .folder-icon-wrap .icon { width: 32px; height: 32px; }
+        .folder-card h3 { font-size: 20px; margin-bottom: 4px; color: var(--text-main); }
+        .folder-card p { font-size: 14px; color: var(--text-muted); }
+        .folder-edit-btn {
+            position: absolute; top: 16px; left: 16px; background: transparent; border: none; cursor: pointer; padding: 8px; border-radius: 50%; color: var(--text-muted); transition: background 0.2s;
+        }
+        .folder-edit-btn:hover { background: var(--border-color); color: var(--text-main); }
+        .folder-edit-btn .icon { width: 16px; height: 16px; }
+
+        /* Note Entries */
+        .entry-card { background-color: var(--surface-color); border: 1px solid var(--border-color); border-radius: 20px; padding: 24px; cursor: pointer; box-shadow: var(--shadow); transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; gap: 12px; }
+        .entry-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+        .entry-card .dates { font-size: 12px; color: var(--text-muted); display: flex; justify-content: flex-end; }
+        .entry-card h3 { font-size: 20px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .entry-card p { font-size: 14px; color: var(--text-muted); line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+        /* Login Screen Specifics */
+        #login-screen { justify-content: center; align-items: center; position: relative; }
+        .login-box { background-color: var(--surface-color); padding: 40px; border-radius: 24px; box-shadow: var(--shadow); text-align: center; width: 90%; max-width: 400px; }
+        
+        .theme-toggle { position: absolute; top: 20px; left: 20px; background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 50%; width: 48px; height: 48px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); }
+        .lock-icon-wrap { width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary), #9333ea); border-radius: 50%; margin: 0 auto 24px; display: flex; align-items: center; justify-content: center; }
+
+        /* Editor Specifics */
+        #editor-screen { background: var(--bg-color); }
+        .editor-content { flex: 1; padding: 40px; max-width: 800px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
+        .editor-title { font-size: 32px; font-weight: bold; border: none; background: transparent; color: var(--text-main); outline: none; }
+        .editor-body { flex: 1; font-size: 18px; line-height: 1.8; border: none; background: transparent; color: var(--text-main); outline: none; resize: none; min-height: 400px; }
+        .date-badge { display: inline-block; background: var(--surface-color); border: 1px solid var(--border-color); padding: 4px 12px; border-radius: 8px; font-size: 12px; color: var(--text-muted); margin-left: 8px; }
+
+        /* Modals */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: var(--modal-bg); z-index: 100; align-items: center; justify-content: center; }
+        .modal-overlay.active { display: flex; }
+        .modal-card { background: var(--surface-color); border-radius: 24px; padding: 32px; width: 90%; max-width: 400px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 16px; }
+        .modal-card h2 { font-size: 20px; margin-bottom: 8px; }
+        .modal-card input { padding: 12px; font-size: 18px; text-align: center; letter-spacing: 4px; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 16px; }
+
+    </style>
+</head>
+<body>
+
+    <!-- 1. LOGIN SCREEN -->
+    <div id="login-screen" class="screen active">
+        <button class="theme-toggle" onclick="toggleTheme()" title="تغيير المظهر">
+            <span class="icon icon-moon" id="theme-icon"></span>
+        </button>
+        <div class="login-box">
+            <div class="lock-icon-wrap">
+                <span class="icon icon-lock" style="width: 32px; height: 32px;"></span>
+            </div>
+            <h1 style="margin-bottom: 8px;">مذكراتي</h1>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">يرجى إدخال رمز المرور للوصول إلى مجلداتك</p>
+            <input type="password" id="pin-input" class="input-field" placeholder="••••" maxlength="4" style="text-align: center; font-size: 32px; letter-spacing: 12px; margin-bottom: 8px;">
+            <p id="pin-error" style="color: var(--red); font-size: 14px; min-height: 20px; margin-bottom: 16px;"></p>
+            <button class="btn btn-primary" style="width: 100%;" onclick="attemptLogin()">فتح التطبيق</button>
+        </div>
+    </div>
+
+    <!-- 2. FOLDERS SCREEN (HOME) -->
+    <div id="folders-screen" class="screen">
+        <div class="header">
+            <h1>المجلدات والتصنيفات</h1>
+            <div class="header-actions">
+                <button class="btn btn-icon" onclick="toggleTheme()" title="المظهر">
+                    <span class="icon icon-moon" id="dash-theme-icon"></span>
+                </button>
+                <button class="btn btn-icon" onclick="openPasswordModal()" title="تغيير رمز المرور">
+                    <span class="icon icon-gear"></span>
+                </button>
+                <button class="btn" onclick="lockApp()" style="background: var(--surface-color); border: 1px solid var(--border-color); color: var(--red);" title="قفل التطبيق">
+                    <span class="icon icon-lock-red"></span>
+                </button>
+                <button class="btn btn-primary" onclick="addFolder()">
+                    <span class="icon icon-plus"></span> مجلد جديد
+                </button>
+            </div>
+        </div>
+        <div class="main-content" id="folders-grid">
+            <!-- Folders injected via JS -->
+        </div>
+    </div>
+
+    <!-- 3. NOTES SCREEN (INSIDE A FOLDER) -->
+    <div id="notes-screen" class="screen">
+        <div class="header">
+            <h1>
+                <button class="btn btn-icon" style="padding: 8px;" onclick="showScreen('folders-screen')">
+                    <span class="icon icon-arrow-right" style="transform: rotate(180deg);"></span>
+                </button>
+                <span id="folder-title-display">اسم المجلد</span>
+            </h1>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="openEditor()">
+                    <span class="icon icon-pen"></span> تدوين جديد
+                </button>
+            </div>
+        </div>
+        <div class="main-content" id="notes-grid">
+            <!-- Notes injected via JS -->
+        </div>
+    </div>
+
+    <!-- 4. EDITOR SCREEN -->
+    <div id="editor-screen" class="screen">
+        <div class="header" style="padding: 16px 40px;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <button class="btn btn-icon" onclick="showScreen('notes-screen')" style="padding: 8px;">
+                    <span class="icon icon-arrow-right" style="transform: rotate(180deg);"></span>
+                </button>
+                <h2 style="font-size: 18px;" id="editor-mode-title">مذكرة جديدة</h2>
+            </div>
+            <div class="header-actions">
+                <button id="delete-btn" class="btn btn-danger" onclick="deleteEntry()" style="display: none;">
+                    <span class="icon icon-trash"></span> حذف
+                </button>
+                <button class="btn btn-primary" onclick="saveEntry()">حفظ المذكرة</button>
+            </div>
+        </div>
+        <div class="editor-content">
+            <input type="text" id="entry-title" class="editor-title" placeholder="عنوان المذكرة (اختياري)...">
+            <div style="display: flex; gap: 8px;">
+                <span class="date-badge" id="hijri-date"></span>
+                <span class="date-badge" id="gregorian-date"></span>
+            </div>
+            <textarea id="entry-body" class="editor-body" placeholder="بماذا تفكر اليوم؟..."></textarea>
+        </div>
+    </div>
+
+    <!-- CHANGE PASSWORD MODAL -->
+    <div id="password-modal" class="modal-overlay">
+        <div class="modal-card">
+            <h2>تغيير رمز المرور</h2>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 8px;">أدخل رمز المرور الحالي والجديد.</p>
+            
+            <input type="password" id="old-pin" class="input-field" placeholder="الرمز الحالي" maxlength="4">
+            <input type="password" id="new-pin" class="input-field" placeholder="الرمز الجديد" maxlength="4">
+            
+            <p id="pwd-error" style="color: var(--red); font-size: 14px; min-height: 20px; margin: 0;"></p>
+            
+            <div class="modal-actions">
+                <button class="btn" style="background: var(--bg-color); color: var(--text-main);" onclick="closePasswordModal()">إلغاء</button>
+                <button class="btn btn-primary" onclick="saveNewPassword()">حفظ التغييرات</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA & STATE ---
+        let isDark = false;
+        let entries = [];
+        let config = {
+            password: '1234',
+            categories: [
+                { id: 'cat1', name: 'شخصي' },
+                { id: 'cat2', name: 'العمل' },
+                { id: 'cat3', name: 'السفر' }
+            ]
+        };
+        let currentFolderId = null;
+        let currentEditingId = null;
+
+        // Load data on start
+        try {
+            const savedEntries = localStorage.getItem('diary_entries_v2');
+            const savedConfig = localStorage.getItem('diary_config_v2');
+            
+            if (savedEntries) entries = JSON.parse(savedEntries);
+            if (savedConfig) config = Object.assign(config, JSON.parse(savedConfig));
+            
+            // Migration: if someone has old entries from prototype v1
+            const oldEntries = localStorage.getItem('vanilla_diary_entries');
+            if (oldEntries && !savedEntries) {
+                let parsedOld = JSON.parse(oldEntries);
+                entries = parsedOld.map(e => ({
+                    id: e.id,
+                    categoryId: 'cat1', // Dump old ones into 'شخصي'
+                    title: e.title,
+                    body: e.body,
+                    timestamp: e.timestamp
+                }));
+                saveData();
+            }
+        } catch (e) { console.error("Loading error:", e); }
+
+        function saveData() {
+            try {
+                localStorage.setItem('diary_entries_v2', JSON.stringify(entries));
+                localStorage.setItem('diary_config_v2', JSON.stringify(config));
+            } catch(e) {}
+        }
+
+        // --- THEME ---
+        function toggleTheme() {
+            isDark = !isDark;
+            const svgs = {
+                sun: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23facc15'%3E%3Cpath d='M361.5 1.2c5 2.1 8.6 6.6 9.6 11.9L391 121l107.9 19.8c5.3 1 9.8 4.6 11.9 9.6s1.5 10.7-1.6 15.2L446.9 256l62.3 90.3c3.1 4.5 3.7 10.2 1.6 15.2s-6.6 8.6-11.9 9.6L391 391 371.1 498.9c-1 5.3-4.6 9.8-9.6 11.9s-10.7 1.5-15.2-1.6L256 446.9l-90.3 62.3c-4.5 3.1-10.2 3.7-15.2 1.6s-8.6-6.6-9.6-11.9L121 391 13.1 371.1c-5.3-1-9.8-4.6-11.9-9.6s-1.5-10.7 1.6-15.2L65.1 256 2.8 165.7c-3.1-4.5-3.7-10.2-1.6-15.2s6.6-8.6 11.9-9.6L121 121 140.9 13.1c1-5.3 4.6-9.8 9.6-11.9s10.7-1.5 15.2 1.6L256 65.1 346.3 2.8c4.5-3.1 10.2-3.7 15.2-1.6zM160 256a96 96 0 1 1 192 0 96 96 0 1 1 -192 0zm224 0a128 128 0 1 0 -256 0 128 128 0 1 0 256 0z'/%3E%3C/svg%3E",
+                moon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 384 512' fill='%234b5563'%3E%3Cpath d='M223.5 32C100 32 0 132.3 0 256S100 480 223.5 480c60.6 0 115.5-24.2 155.8-63.4c5-4.9 6.3-12.5 3.1-18.7s-10.1-9.7-17-8.5c-9.8 1.7-19.8 2.6-30.1 2.6c-96.9 0-175.5-78.8-175.5-176c0-65.8 36-123.1 89.3-153.3c6.1-3.5 9.2-10.5 7.7-17.3s-7.3-11.9-14.3-12.5c-6.3-.5-12.6-.8-19-.8z'/%3E%3C/svg%3E"
+            };
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('theme-icon').style.backgroundImage = `url("${svgs.sun}")`;
+                document.getElementById('dash-theme-icon').style.backgroundImage = `url("${svgs.sun}")`;
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('theme-icon').style.backgroundImage = `url("${svgs.moon}")`;
+                document.getElementById('dash-theme-icon').style.backgroundImage = `url("${svgs.moon}")`;
+            }
+        }
+
+        // --- NAVIGATION & AUTH ---
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            
+            if (id === 'folders-screen') renderFolders();
+        }
+
+        function attemptLogin() {
+            const pin = document.getElementById('pin-input').value;
+            if (pin === config.password) {
+                document.getElementById('pin-input').value = '';
+                document.getElementById('pin-error').innerText = '';
+                showScreen('folders-screen');
+            } else {
+                document.getElementById('pin-error').innerText = 'رمز المرور غير صحيح';
+                document.getElementById('pin-input').value = '';
+            }
+        }
+
+        document.getElementById('pin-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') attemptLogin();
+        });
+
+        function lockApp() { showScreen('login-screen'); }
+
+        // --- PASSWORD MODAL ---
+        function openPasswordModal() {
+            document.getElementById('old-pin').value = '';
+            document.getElementById('new-pin').value = '';
+            document.getElementById('pwd-error').innerText = '';
+            document.getElementById('password-modal').classList.add('active');
+        }
+
+        function closePasswordModal() {
+            document.getElementById('password-modal').classList.remove('active');
+        }
+
+        function saveNewPassword() {
+            const oldP = document.getElementById('old-pin').value;
+            const newP = document.getElementById('new-pin').value;
+            
+            if (oldP !== config.password) {
+                document.getElementById('pwd-error').innerText = "رمز المرور الحالي غير صحيح.";
+                return;
+            }
+            if (newP.length < 4) {
+                document.getElementById('pwd-error').innerText = "يجب أن يكون الرمز الجديد 4 أرقام على الأقل.";
+                return;
+            }
+            
+            config.password = newP;
+            saveData();
+            closePasswordModal();
+            alert("تم تغيير رمز المرور بنجاح.");
+        }
+
+        // --- DATE FORMATTERS ---
+        function getHijriStr(date) {
+            try { return new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {day: 'numeric', month: 'long', year : 'numeric'}).format(date); } 
+            catch (e) { return date.toLocaleDateString('ar'); }
+        }
+        function getGregorianStr(date) {
+            try { return new Intl.DateTimeFormat('ar-EG', {day: 'numeric', month: 'long', year : 'numeric'}).format(date); } 
+            catch (e) { return date.toLocaleDateString(); }
+        }
+
+        // --- FOLDERS (CATEGORIES) ---
+        function renderFolders() {
+            const grid = document.getElementById('folders-grid');
+            grid.innerHTML = '';
+            
+            config.categories.forEach(cat => {
+                const count = entries.filter(e => e.categoryId === cat.id).length;
+                const card = document.createElement('div');
+                card.className = 'folder-card';
+                card.onclick = () => openFolder(cat.id);
+                
+                card.innerHTML = `
+                    <button class="folder-edit-btn" onclick="renameFolder('${cat.id}', event)" title="إعادة تسمية المجلد">
+                        <span class="icon icon-edit"></span>
+                    </button>
+                    <div class="folder-icon-wrap"><span class="icon icon-folder"></span></div>
+                    <h3>${cat.name}</h3>
+                    <p>${count} مذكرة</p>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function addFolder() {
+            const name = prompt("أدخل اسم المجلد الجديد:");
+            if (name && name.trim()) {
+                config.categories.push({ id: 'cat_' + Date.now(), name: name.trim() });
+                saveData();
+                renderFolders();
+            }
+        }
+
+        function renameFolder(id, event) {
+            event.stopPropagation(); // Prevent opening the folder
+            const cat = config.categories.find(c => c.id === id);
+            const newName = prompt("تعديل اسم المجلد:", cat.name);
+            if (newName && newName.trim()) {
+                cat.name = newName.trim();
+                saveData();
+                renderFolders();
+            }
+        }
+
+        // --- NOTES IN FOLDER ---
+        function openFolder(id) {
+            currentFolderId = id;
+            const cat = config.categories.find(c => c.id === id);
+            document.getElementById('folder-title-display').innerText = cat.name;
+            showScreen('notes-screen');
+            renderNotes();
+        }
+
+        function renderNotes() {
+            const grid = document.getElementById('notes-grid');
+            grid.innerHTML = '';
+            
+            const folderEntries = entries.filter(e => e.categoryId === currentFolderId);
+            if (folderEntries.length === 0) {
+                grid.innerHTML = `<div class="empty-state"><h2>المجلد فارغ</h2><p>انقر على "تدوين جديد" لإضافة مذكرات هنا.</p></div>`;
+                return;
+            }
+
+            const sorted = folderEntries.sort((a,b) => b.timestamp - a.timestamp);
+            sorted.forEach(entry => {
+                const dateObj = new Date(entry.timestamp);
+                const card = document.createElement('div');
+                card.className = 'entry-card';
+                card.onclick = () => openEditor(entry.id);
+                
+                card.innerHTML = `
+                    <div class="dates">
+                        <div style="text-align: left;">
+                            <div>${getHijriStr(dateObj)}</div>
+                            <div style="opacity: 0.7; font-size: 11px;">${getGregorianStr(dateObj)}</div>
+                        </div>
+                    </div>
+                    <h3>${entry.title || 'بدون عنوان'}</h3>
+                    <p>${entry.body.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // --- EDITOR ---
+        function openEditor(id = null) {
+            currentEditingId = id;
+            const now = new Date();
+            let d = now;
+            
+            if (id) {
+                const entry = entries.find(e => e.id === id);
+                document.getElementById('entry-title').value = entry.title;
+                document.getElementById('entry-body').value = entry.body;
+                document.getElementById('delete-btn').style.display = 'inline-flex';
+                document.getElementById('editor-mode-title').innerText = 'تعديل المذكرة';
+                d = new Date(entry.timestamp);
+            } else {
+                document.getElementById('entry-title').value = '';
+                document.getElementById('entry-body').value = '';
+                document.getElementById('delete-btn').style.display = 'none';
+                document.getElementById('editor-mode-title').innerText = 'مذكرة جديدة';
+            }
+
+            document.getElementById('hijri-date').innerText = getHijriStr(d);
+            document.getElementById('gregorian-date').innerText = getGregorianStr(d);
+
+            showScreen('editor-screen');
+        }
+
+        function saveEntry() {
+            const title = document.getElementById('entry-title').value.trim();
+            const body = document.getElementById('entry-body').value.trim();
+
+            if (!body && !title) {
+                showScreen('notes-screen'); // Skip saving empty notes
+                return;
+            }
+
+            const entryData = {
+                title: title,
+                body: body,
+                categoryId: currentFolderId,
+                timestamp: currentEditingId ? entries.find(e=>e.id===currentEditingId).timestamp : Date.now()
+            };
+
+            if (currentEditingId) {
+                const index = entries.findIndex(e => e.id === currentEditingId);
+                entries[index] = { ...entries[index], ...entryData };
+            } else {
+                entries.push({ id: Date.now().toString(), ...entryData });
+            }
+
+            saveData();
+            showScreen('notes-screen');
+            renderNotes();
+        }
+
+        function deleteEntry() {
+            if (confirm('هل أنت متأكد من حذف هذه المذكرة نهائياً؟')) {
+                entries = entries.filter(e => e.id !== currentEditingId);
+                saveData();
+                showScreen('notes-screen');
+                renderNotes();
+            }
+        }
+    </script>
+<script>
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", () => {
+                navigator.serviceWorker.register("sw.js").catch(err => console.log("SW Error", err));
+            });
+        }
+    </script>
+</body>
+</html>
